@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  auth_db:
+    image: postgres:15
+    container_name: auth_db
+    restart: always
+    environment:
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: authpass
+      POSTGRES_DB: auth_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+
+  migrate:
+    build:
+      context: .
+    container_name: auth_migrate
+    restart: "no"       # миграции выполняются один раз
+    env_file:
+      - .env
+    depends_on:
+      - auth_db
+    command: ["./migrate"]
+
+  auth_service:
+    build:
+      context: .
+    container_name: auth_service
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${GRPC_SERVER_PORT}:${GRPC_SERVER_PORT}"
+    depends_on:
+      - auth_db
+      - migrate         # ждем пока миграции применятся
+    command: ["./auth-service"]
+
+volumes:
+  auth_db_data:

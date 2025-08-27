@@ -1,0 +1,38 @@
+# Бинарные файлы
+/bin/
+/build/
+/*.exe
+/*.exe~
+/*.dll
+/*.so
+/*.dylib
+
+# Зависимости Go
+/vendor/
+
+# Конфиги среды
+.env
+
+# Логи
+*.log
+
+# IDE / редакторы
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+*.env
+
+# Go модульные файлы, но оставляем для проекта
+go.sum
+
+# Скомпилированные протобаф файлы
+**/*.pb.go
+
+# Файлы временные
+*.tmp
+*.temp
+
