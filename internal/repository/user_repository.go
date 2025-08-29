@@ -21,18 +21,19 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 func (r *UserRepository) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
 	const op = "repository.SaveUser"
 
-	// SQL-запрос для PostgreSQL с RETURNING
-	query := `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`
+	query := `INSERT INTO users (email, pass_hash) VALUES ($1, $2) RETURNING id`
 
 	var id int64
 	err := r.db.QueryRowContext(ctx, query, email, passHash).Scan(&id)
 	if err != nil {
 		// Проверка на уникальность email (PostgreSQL unique violation)
 		var pqErr *pq.Error
-		if errors.As(err, &pqErr) && pqErr.Code == "23505" { // unique_violation
-			return 0, fmt.Errorf("%s:%w", op, ErrUserExists)
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			// <- возвращаем именно ErrUserExists
+			return 0, ErrUserExists
 		}
-		return 0, fmt.Errorf("%s:%w", op, err)
+		// другие ошибки
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return id, nil

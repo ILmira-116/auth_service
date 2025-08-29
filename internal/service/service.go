@@ -36,12 +36,6 @@ type Auth struct {
 	jwtSecret   string
 }
 
-var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrInvalidAppID       = errors.New("invalid app id")
-	ErrUserExists         = errors.New("user already exisits")
-)
-
 // New returns a new instance of the Auth service.
 func New(
 	log *slog.Logger,
@@ -78,7 +72,7 @@ func (a *Auth) Login(ctx context.Context, email, password string, appID int) (st
 		if errors.Is(err, repository.ErrUserNotFound) {
 			a.log.Warn("user not found", sl.Err(err))
 
-			return "", fmt.Errorf("%s:%w", op, ErrInvalidCredentials)
+			return "", fmt.Errorf("%s:%w", op, repository.ErrInvalidCredentials)
 		}
 
 		a.log.Error("failed to get user", sl.Err(err))
@@ -92,13 +86,13 @@ func (a *Auth) Login(ctx context.Context, email, password string, appID int) (st
 	if err != nil {
 		log.Error("invalid credentials", sl.Err(err))
 
-		return "", fmt.Errorf("%s:%w", op, ErrInvalidCredentials)
+		return "", fmt.Errorf("%s:%w", op, repository.ErrInvalidCredentials)
 	}
 
 	// получить приложение в которое пользователь хочет залогинится
 	app, err := a.appProvider.App(ctx, appID)
 	if err != nil {
-		return "", fmt.Errorf("%s:%w", op, ErrInvalidCredentials)
+		return "", fmt.Errorf("%s:%w", op, repository.ErrInvalidCredentials)
 	}
 
 	log.Info("user logged in succesfully")
@@ -106,7 +100,7 @@ func (a *Auth) Login(ctx context.Context, email, password string, appID int) (st
 	// создаем токен
 	token, err := jwt.NewToken(user, app, a.jwtSecret, a.tokenTTL)
 	if err != nil {
-		return "", fmt.Errorf("%s:%w", op, ErrInvalidCredentials)
+		return "", fmt.Errorf("%s:%w", op, repository.ErrInvalidCredentials)
 	}
 
 	return token, nil
@@ -135,13 +129,11 @@ func (a *Auth) Register(ctx context.Context, email, password string) (int64, err
 	id, err := a.usrSaver.SaveUser(ctx, email, passHash)
 	if err != nil {
 		if errors.Is(err, repository.ErrUserExists) {
-			a.log.Warn("user not found", sl.Err(err))
-
-			return 0, fmt.Errorf("%s:%w", op, ErrUserExists)
+			a.log.Warn("user already exists", sl.Err(err))
+			return 0, err
 		}
 
 		a.log.Error("failed to save user", sl.Err(err))
-
 		return 0, fmt.Errorf("%s:%w", op, err)
 	}
 
@@ -165,7 +157,7 @@ func (a *Auth) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 		if errors.Is(err, repository.ErrAppNotFound) {
 			a.log.Warn("user not found", sl.Err(err))
 
-			return false, fmt.Errorf("%s:%w", op, ErrInvalidAppID)
+			return false, fmt.Errorf("%s:%w", op, repository.ErrAppNotFound)
 		}
 
 		a.log.Error("failed to get user", sl.Err(err))

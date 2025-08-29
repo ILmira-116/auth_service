@@ -12,8 +12,9 @@ func NewToken(user model.User, app model.App, secret string, ttl time.Duration) 
 	claims := jwt.MapClaims{
 		"user_id": user.ID,
 		"email":   user.Email,
-		"exp":     time.Now().Add(ttl).Unix(), // срок действия токена
-		"iat":     time.Now().Unix(),          // время выпуска
+		"app_id":  app.ID,
+		"exp":     time.Now().Add(ttl).Unix(),
+		"iat":     time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

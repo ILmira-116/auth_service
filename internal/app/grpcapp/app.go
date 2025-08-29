@@ -20,7 +20,7 @@ type App struct {
 
 func New(log *slog.Logger, addr string, authSvc *service.Auth) *App {
 	gRPCServer := grpc.NewServer()
-	authgrpc.Register(gRPCServer, authSvc) // <- передаём готовый экземпляр Auth
+	authgrpc.Register(gRPCServer, authSvc, log) // <- передаём готовый экземпляр Auth
 
 	return &App{
 		log:        log,
