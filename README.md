@@ -49,7 +49,7 @@
 ### Локальный запуск
 
 ```bash
-git clone <URL_REPO>
+git clone git@github.com:ILmira-116/auth_service.git
 cd auth-service
 go mod tidy
 go run cmd/main.go
